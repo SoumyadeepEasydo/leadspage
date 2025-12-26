@@ -213,6 +213,16 @@ export default function LeadCRMPrototype() {
     nextFollowUp: '',
     description: ''
   });
+  const [showAddLeadModal, setShowAddLeadModal] = useState(false);
+  const [addLeadStep, setAddLeadStep] = useState(1);
+  const [addLeadFormData, setAddLeadFormData] = useState({
+    companyName: '',
+    email: '',
+    countryCode: '+91',
+    phone: '',
+    companySize: '',
+    interests: []
+  });
 
   const resetFlow = () => {
     setSelectedLead(null);
@@ -249,6 +259,74 @@ export default function LeadCRMPrototype() {
     // In production, this would create the ticket in your system
     console.log('Creating ticket:', { lead: selectedLead, ...ticketData });
     closeTicketModal();
+  };
+
+  const openAddLeadModal = () => {
+    setShowAddLeadModal(true);
+    setAddLeadStep(1);
+    setAddLeadFormData({
+      companyName: '',
+      email: '',
+      countryCode: '+91',
+      phone: '',
+      companySize: '',
+      interests: []
+    });
+  };
+
+  const closeAddLeadModal = () => {
+    setShowAddLeadModal(false);
+    setAddLeadStep(1);
+    setAddLeadFormData({
+      companyName: '',
+      email: '',
+      countryCode: '+91',
+      phone: '',
+      companySize: '',
+      interests: []
+    });
+  };
+
+  const handleNextStep = () => {
+    if (addLeadStep < 3) {
+      setAddLeadStep(addLeadStep + 1);
+    }
+  };
+
+  const handlePrevStep = () => {
+    if (addLeadStep > 1) {
+      setAddLeadStep(addLeadStep - 1);
+    }
+  };
+
+  const handleInterestToggle = (interest) => {
+    setAddLeadFormData(prev => ({
+      ...prev,
+      interests: prev.interests.includes(interest)
+        ? prev.interests.filter(i => i !== interest)
+        : [...prev.interests, interest]
+    }));
+  };
+
+  const handleAddLead = () => {
+    const newLead = {
+      id: leadsData.length + 1,
+      company: addLeadFormData.companyName,
+      source: 'manual',
+      utm_source: 'dashboard',
+      contact: addLeadFormData.email,
+      phone: `${addLeadFormData.countryCode} ${addLeadFormData.phone}`,
+      size: addLeadFormData.companySize,
+      interests: addLeadFormData.interests,
+      captured: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }),
+      status: 'New',
+      optedOut: false,
+      optOutDate: null,
+      lastContacted: null,
+      responseStatus: null
+    };
+    setLeadsData([...leadsData, newLead]);
+    closeAddLeadModal();
   };
 
   const openGroupModal = (lead, e) => {
@@ -443,7 +521,10 @@ export default function LeadCRMPrototype() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
           </button>
-          <button className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center justify-center">
+          <button 
+            onClick={openAddLeadModal}
+            className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center justify-center"
+          >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
@@ -471,7 +552,10 @@ export default function LeadCRMPrototype() {
             </svg>
             Export
           </button>
-          <button className="px-4 py-2 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 flex items-center gap-2">
+          <button 
+            onClick={openAddLeadModal}
+            className="px-4 py-2 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 flex items-center gap-2"
+          >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
@@ -484,9 +568,10 @@ export default function LeadCRMPrototype() {
 
   // ==================== STATS CARDS ====================
   const StatsCards = () => (
-    <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
-        <div className="bg-white rounded-xl p-3 sm:p-4 border-2 border-blue-200">
+    <div className="mb-4 sm:mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3">
+        {/* Total Leads */}
+        <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-200">
           <div className="flex items-start justify-between">
             <div className="min-w-0 flex-1">
               <p className="text-xs sm:text-sm text-gray-500">Total Leads</p>
@@ -500,7 +585,9 @@ export default function LeadCRMPrototype() {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-3 sm:p-4 border-2 border-green-200">
+        
+        {/* This Week */}
+        <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-200">
           <div className="flex items-start justify-between">
             <div className="min-w-0 flex-1">
               <p className="text-xs sm:text-sm text-gray-500">This Week</p>
@@ -514,7 +601,9 @@ export default function LeadCRMPrototype() {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-3 sm:p-4 border-2 border-purple-200">
+        
+        {/* Qualified */}
+        <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-200">
           <div className="flex items-start justify-between">
             <div className="min-w-0 flex-1">
               <p className="text-xs sm:text-sm text-gray-500">Qualified</p>
@@ -528,7 +617,9 @@ export default function LeadCRMPrototype() {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-3 sm:p-4 border-2 border-amber-200">
+        
+        {/* Pending Contact */}
+        <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-200">
           <div className="flex items-start justify-between">
             <div className="min-w-0 flex-1">
               <p className="text-xs sm:text-sm text-gray-500">Pending Contact</p>
@@ -542,18 +633,20 @@ export default function LeadCRMPrototype() {
             </div>
           </div>
         </div>
-      </div>
-      
-      {/* Second row - Campaign stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
+        
+        {/* Campaign Eligible */}
         <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-200">
           <p className="text-xs sm:text-sm text-gray-500">Campaign Eligible</p>
           <p className="text-2xl sm:text-3xl font-bold text-green-600 mt-1">{leadsData.filter(l => !l.optedOut).length}</p>
         </div>
+        
+        {/* Opted Out */}
         <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-200">
           <p className="text-xs sm:text-sm text-gray-500">Opted Out</p>
           <p className="text-2xl sm:text-3xl font-bold text-red-600 mt-1">{leadsData.filter(l => l.optedOut).length}</p>
         </div>
+        
+        {/* Response Rate */}
         <div className="bg-white rounded-xl p-3 sm:p-4 border border-gray-200">
           <p className="text-xs sm:text-sm text-gray-500">Response Rate</p>
           <p className="text-2xl sm:text-3xl font-bold text-green-600 mt-1">
@@ -671,9 +764,19 @@ export default function LeadCRMPrototype() {
           </div>
           
           <div className="space-y-2 text-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-500">Contact:</span>
-              <span className="text-gray-900 font-medium truncate ml-2">{lead.contact}</span>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+                <span className="text-gray-600 text-sm">{lead.phone}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span className="text-gray-600 text-sm truncate">{lead.contact}</span>
+              </div>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-gray-500">Source:</span>
@@ -772,7 +875,22 @@ export default function LeadCRMPrototype() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 lg:px-6 py-4 text-sm text-gray-600">{lead.contact}</td>
+                      <td className="px-4 lg:px-6 py-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <svg className="w-4 h-4 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                            <span className="text-sm text-gray-600">{lead.phone}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <svg className="w-4 h-4 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            <span className="text-sm text-gray-600">{lead.contact}</span>
+                          </div>
+                        </div>
+                      </td>
                       <td className="px-4 lg:px-6 py-4">
                         <span className={`px-2 py-1 text-xs rounded-full border whitespace-nowrap ${getSourceBadge(lead.source, lead.utm_source).color}`}>
                           {getSourceBadge(lead.source, lead.utm_source).label}
@@ -1505,6 +1623,240 @@ export default function LeadCRMPrototype() {
     </div>
   );
 
+  // ==================== ADD LEAD MODAL ====================
+  const AddLeadModal = () => {
+    const companySizes = [
+      '1 - 10 employees',
+      '10 - 30 employees',
+      '30 - 50 employees',
+      '50 - 100 employees',
+      '100 - 500 employees',
+      '1000+ employees'
+    ];
+
+    const departments = [
+      'HR Attendance + Payroll',
+      'Task delegation + Productivity',
+      'Business Chat + AI',
+      'Sales lead funnel - Wa integrations',
+      'Office on Auto Pilot'
+    ];
+
+    const canProceedStep1 = addLeadFormData.companyName.trim() && addLeadFormData.email.trim() && addLeadFormData.phone.trim();
+    const canProceedStep2 = addLeadFormData.companySize !== '';
+    const canProceedStep3 = addLeadFormData.interests.length > 0;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-auto">
+          {/* Header */}
+          <div className="sticky top-0 bg-white border-b p-6 flex items-center justify-between z-10">
+            <div className="flex items-center gap-3">
+              {addLeadStep > 1 && (
+                <button
+                  onClick={handlePrevStep}
+                  className="p-1 hover:bg-gray-100 rounded"
+                >
+                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+              )}
+              <h2 className="text-xl font-semibold text-gray-900">
+                {addLeadStep === 1 ? 'Company Information' : addLeadStep === 2 ? 'Company Size' : 'Enquiry Details'}
+              </h2>
+            </div>
+            <button onClick={closeAddLeadModal} className="p-1 hover:bg-gray-100 rounded">
+              <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Step Indicator */}
+          <div className="px-6 pt-4 pb-2">
+            <p className="text-sm text-gray-500">Step {addLeadStep} of 3</p>
+          </div>
+
+          {/* Content */}
+          <div className="p-6">
+            {/* Step 1: Company Information */}
+            {addLeadStep === 1 && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Welcome to EasyDo!</h3>
+                  <p className="text-gray-600">Let's get started with your company details</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Company Name
+                  </label>
+                  <input
+                    type="text"
+                    value={addLeadFormData.companyName}
+                    onChange={(e) => setAddLeadFormData({ ...addLeadFormData, companyName: e.target.value })}
+                    placeholder="Enter your company name"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Enter your company name</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={addLeadFormData.email}
+                    onChange={(e) => setAddLeadFormData({ ...addLeadFormData, email: e.target.value })}
+                    placeholder="Enter email address"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">We'll send information to this email</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Phone Number
+                  </label>
+                  <div className="flex gap-2">
+                    <select
+                      value={addLeadFormData.countryCode}
+                      onChange={(e) => setAddLeadFormData({ ...addLeadFormData, countryCode: e.target.value })}
+                      className="px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 transition-colors bg-white"
+                    >
+                      <option value="+91">+91</option>
+                      <option value="+1">+1</option>
+                      <option value="+44">+44</option>
+                      <option value="+86">+86</option>
+                      <option value="+81">+81</option>
+                    </select>
+                    <input
+                      type="tel"
+                      value={addLeadFormData.phone}
+                      onChange={(e) => setAddLeadFormData({ ...addLeadFormData, phone: e.target.value })}
+                      placeholder="Enter phone number"
+                      className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Company Size */}
+            {addLeadStep === 2 && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Number of Employees</h3>
+                  <p className="text-gray-600">Select your company size</p>
+                </div>
+
+                <div className="space-y-2 max-h-80 overflow-y-auto">
+                  {companySizes.map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => setAddLeadFormData({ ...addLeadFormData, companySize: size })}
+                      className={`w-full p-4 rounded-lg border-2 text-left flex items-center justify-between transition-all ${
+                        addLeadFormData.companySize === size
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <span className="font-medium text-gray-900">{size}</span>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        addLeadFormData.companySize === size
+                          ? 'border-blue-500 bg-blue-500'
+                          : 'border-gray-300'
+                      }`}>
+                        {addLeadFormData.companySize === size && (
+                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Enquiry Details */}
+            {addLeadStep === 3 && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Which departments do you wish to automate?</h3>
+                  <p className="text-gray-600">Select one or more</p>
+                </div>
+
+                <div className="space-y-2 max-h-80 overflow-y-auto">
+                  {departments.map((dept) => (
+                    <button
+                      key={dept}
+                      onClick={() => handleInterestToggle(dept)}
+                      className={`w-full p-4 rounded-lg border-2 text-left flex items-center justify-between transition-all ${
+                        addLeadFormData.interests.includes(dept)
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <span className="font-medium text-gray-900">{dept}</span>
+                      <div className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
+                        addLeadFormData.interests.includes(dept)
+                          ? 'border-blue-500 bg-blue-500'
+                          : 'border-gray-300 bg-white'
+                      }`}>
+                        {addLeadFormData.interests.includes(dept) && (
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="p-6 border-t space-y-4">
+            {addLeadStep < 3 ? (
+              <button
+                onClick={handleNextStep}
+                disabled={(addLeadStep === 1 && !canProceedStep1) || (addLeadStep === 2 && !canProceedStep2)}
+                className={`w-full py-3 rounded-lg font-medium transition-colors ${
+                  (addLeadStep === 1 && canProceedStep1) || (addLeadStep === 2 && canProceedStep2)
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={handleAddLead}
+                disabled={!canProceedStep3}
+                className={`w-full py-3 rounded-lg font-medium transition-colors ${
+                  canProceedStep3
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                Add Lead
+              </button>
+            )}
+
+            {/* Footer Branding */}
+            <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-orange-500 via-yellow-500 to-green-500"></div>
+              <span>Managed by EasyDo Tasks.</span>
+              <a href="#" className="text-blue-600 hover:underline">Learn more</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // ==================== CREATE TICKET MODAL ====================
   const CreateTicketModal = () => (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -1610,6 +1962,7 @@ export default function LeadCRMPrototype() {
       {showChatScreen && selectedLead && <ChatScreen />}
       {showGroupModal && <AddToGroupModal />}
       {showTicketModal && <CreateTicketModal />}
+      {showAddLeadModal && <AddLeadModal />}
     </div>
   );
 }
