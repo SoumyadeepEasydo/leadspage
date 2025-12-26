@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Eye, MessageCircle, Users, Ticket, Plus, Check } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 // Sample groups data
 const initialGroups = [
@@ -329,6 +330,50 @@ export default function LeadCRMPrototype() {
     closeAddLeadModal();
   };
 
+  const exportToExcel = () => {
+    // Prepare data for export
+    const exportData = filteredLeads.map(lead => ({
+      'Company': lead.company,
+      'Phone': lead.phone,
+      'Email': lead.contact,
+      'Company Size': lead.size,
+      'Interests': lead.interests.join(', '),
+      'Source': lead.source === 'whatsapp_flow' ? 'WhatsApp' : lead.utm_source || 'Manual',
+      'Status': lead.status,
+      'Captured Date': lead.captured,
+      'Last Contacted': lead.lastContacted || 'Never',
+      'Response Status': lead.responseStatus || 'Pending',
+      'Opted Out': lead.optedOut ? 'Yes' : 'No',
+      'Opt Out Date': lead.optOutDate || ''
+    }));
+
+    // Create workbook and worksheet
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Leads');
+
+    // Set column widths
+    const columnWidths = [
+      { wch: 20 }, // Company
+      { wch: 18 }, // Phone
+      { wch: 25 }, // Email
+      { wch: 15 }, // Company Size
+      { wch: 30 }, // Interests
+      { wch: 12 }, // Source
+      { wch: 15 }, // Status
+      { wch: 20 }, // Captured Date
+      { wch: 20 }, // Last Contacted
+      { wch: 15 }, // Response Status
+      { wch: 12 }, // Opted Out
+      { wch: 18 }  // Opt Out Date
+    ];
+    worksheet['!cols'] = columnWidths;
+
+    // Generate Excel file and download
+    const fileName = `WhatsApp_Leads_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+  };
+
   const openGroupModal = (lead, e) => {
     if (e) e.stopPropagation();
     setSelectedLead(lead);
@@ -516,7 +561,10 @@ export default function LeadCRMPrototype() {
           </div>
         </div>
         <div className="flex gap-2 ml-2 flex-shrink-0">
-          <button className="p-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 flex items-center justify-center">
+          <button 
+            onClick={exportToExcel}
+            className="p-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 flex items-center justify-center"
+          >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
@@ -546,7 +594,10 @@ export default function LeadCRMPrototype() {
           </div>
         </div>
         <div className="flex gap-3">
-          <button className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 flex items-center gap-2">
+          <button 
+            onClick={exportToExcel}
+            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 flex items-center gap-2"
+          >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
